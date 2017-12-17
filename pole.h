@@ -2,6 +2,7 @@
 
 #include <ncursesfunc.h>
 #include <player.h>
+#include <algorithm>
 
 template<class color_>
 class Pole
@@ -257,6 +258,112 @@ public:
 
       return point;
    }
+
+   struct Points {
+      union {
+         int ar[8];
+         struct {
+            int up;
+            int down;
+            int left;
+            int right;
+            int topLeft;
+            int topRight;
+            int downRight;
+            int downLeft;
+         };
+      };
+      int all;
+   };
+
+   Points getPoints (int y, int x)
+   {
+      Points points;
+      int dX;
+      int dY;
+      int qty;
+
+      auto compPointsInDirection = 
+         [](int& direction,             // в каком направлении считаем
+            int start,                  // с какой позиции начинаем
+            color_ (*curPole)(int i),   // функция определения поля внутри цикла
+            void (*iterator) (int& i) ) // функция итератора ++ или --
+      {
+         direction = 0;
+         for (int i = start; i >= 0 && i < 8; iterator(i) ) {
+            if (curPole(i) == currentPlayer().col)
+               break;
+            else if (curPole(i) == otherPlayer().col)
+               direction++;
+            else if (curPole(i) == color_::black) {
+               direction = 0;
+               break;
+            } else if ( i == 0 || i == 7 ) {
+               // до сюда дойдёт только тогда,
+               // когда все поля в этом направлении и так наши
+               direction = 0;
+               break;
+            }
+         }
+      };
+
+      compPointsInDirection (
+         points.down, 
+         y - 1, 
+         [this, x](int i)->color_ { return this->pole[i][x]; },
+         [](int& i) { --i; }
+      );
+      compPointsInDirection (
+         points.up, 
+         y + 1, 
+         [this, x](int i)->color_ { return this->pole[i][x]; },
+         [](int& i) { ++i; }
+      );
+      compPointsInDirection (
+         points.left, 
+         x - 1, 
+         [this, y](int i)->color_ { return this->pole[y][i]; },
+         [](int& i) { --i; }
+      );
+      compPointsInDirection (
+         points.right, 
+         x + 1,
+         [this, y](int i)->color_ { return this->pole[y][i]; },
+         [](int& i) { ++i; }
+      );
+      qty = std::min (x, y);
+      dX = x - qty;
+      dY = y - qty;
+      compPointsInDirection (
+         points.downLeft,
+         qty - 1,
+         [this, dY, dX](int i)->color_ { return this->pole[dY+i][dX+i]; },
+         [](int& i) { --i; }
+      );
+      qty = std::max (x, y);
+      dX = x - qty;
+      dY = y - qty;
+      compPointsInDirection (
+         points.upRight,
+         qty + 1,
+         [this, dY, dX](int i)->color_ { return this->pole[dY+i][dX+i]; },
+         [](int& i) { --i; }
+      );
+      qty = std::min (7 - x, y);
+      dX = 7 - x - qty;
+      dY = y - qty;
+      compPointsInDirection (
+         points.upLeft,
+         qty - 1,
+         [this, dY, dX](int i)->color_ { return this->pole[dY+i][dX+i]; },
+         [](int& i) { --i; }
+      );
+
+
+      
+   }
+
+
 
    // 1 +1 очко
    // -1 дошли до противника, засчитать очки, перестать считать
