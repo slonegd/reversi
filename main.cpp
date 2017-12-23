@@ -17,7 +17,13 @@ int main()
    keypad (stdscr, true);
    fillAreaInit();
 
-   Pole<color> pole_ = Pole<color> (green, red);
+   // создать 2 игроков
+   // передать Pole в конструктор
+   // в поле хранить номер текущего игрока
+   // действия на нажатия должны делать игроки
+   // соответсвенно currentPlayerGo и getMove в интерфейс
+   // в getMove логика ИИ
+   Pole<color> pole = Pole<color> (green, red);
 
    using Dir = Pole<color>::Dir;
    bool game = true;
@@ -26,13 +32,13 @@ int main()
       int ch;
       ch = getch();
       switch (ch) {
-         case KEY_UP:    pole_.currentPlayerGo(Dir::Up);    break;
-         case KEY_DOWN:  pole_.currentPlayerGo(Dir::Down);  break;
-         case KEY_LEFT:  pole_.currentPlayerGo(Dir::Left);  break;
-         case KEY_RIGHT: pole_.currentPlayerGo(Dir::Right); break;
+         case KEY_UP:    pole.currentPlayerGo(Dir::Up);    break;
+         case KEY_DOWN:  pole.currentPlayerGo(Dir::Down);  break;
+         case KEY_LEFT:  pole.currentPlayerGo(Dir::Left);  break;
+         case KEY_RIGHT: pole.currentPlayerGo(Dir::Right); break;
          case KEY_BACKSPACE: game = false;    break;
          case ' ':
-            pole_.getMove();
+            pole.getMove();
             break;
       }
    }
