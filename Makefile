@@ -4,7 +4,7 @@ clean:
 	-rm -fR ./a.out
 
 build:
-	g++ main.cpp -std=c++17 -lncurses -I. -g
+	g++ main.cpp -std=c++17 -lncursesw -I. -g
 
 run:
 	./a.out

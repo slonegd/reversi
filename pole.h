@@ -3,6 +3,10 @@
 #include <ncursesfunc.h>
 #include <player.h>
 #include <algorithm>
+#include <pseudograph.h>
+
+using namespace std;
+using namespace PSEUDO;
 
 template<class color_>
 class Pole
@@ -13,6 +17,38 @@ public:
         player { Player<color_>(player1color), Player<color_>(player2color) },
         curPlayer(0)
    {
+      // отрисовка границ
+      const wstring hor  = Line (6, horisontal());
+      const wstring vert = Line (2, vertical());
+      const wstring voidHor = Line (6, L' ');
+
+      auto oneLine = [&](auto begin, auto within, auto innerBoard, auto end)
+      {
+         wstring res = L"";
+         res += begin;
+         wstring tmpstr = within + innerBoard;
+         for (int i = 0; i < 7; ++i)
+            res += tmpstr;
+         res += within;
+         return res += end;
+      };
+
+      wstring upBorder = oneLine ( upLeft(), hor, upWithTap(), upRight() );
+      wstring innerVoid = oneLine ( vertical(), voidHor, vertical(), vertical() );
+      wstring innerBorder = oneLine ( leftWithTap(), hor, crossroad(), rightWithTap() );
+      wstring downBorder = oneLine ( downLeft(), hor, downWithTap(), downRight() );
+
+      mvaddwstr (0, 0, upBorder.c_str() );
+      for (int i = 1; i < 7 * 3 + 1; i += 3) {
+         mvaddwstr (i, 0, innerVoid.c_str() );
+         mvaddwstr (i + 1, 0, innerVoid.c_str() );
+         mvaddwstr (i + 2, 0, innerBorder.c_str() );
+      }
+      mvaddwstr (7 * 3 + 1, 0, innerVoid.c_str() );
+      mvaddwstr (7 * 3 + 2, 0, innerVoid.c_str() );
+      mvaddwstr (7 * 3 + 3, 0, downBorder.c_str() );
+      
+      // заполнение начальных цветов
       for (int i = 0; i < 8; ++i)
          for (int j = 0; j < 8; ++j)
             pole[i][j] = color_::black;
@@ -20,14 +56,16 @@ public:
       pole[4][4] = player[0].col;
       pole[3][4] = player[1].col;
       pole[4][3] = player[1].col;
+      // заливка полей
       for (int i = 0; i < 8; ++i)
          for (int j = 0; j < 8; ++j)
             if ( pole[i][j] != color_::black )
                fillPoleArea (i, j);
+
       int y,x;
       player[curPlayer].getPosition(y, x);
       fillArea ( blue, y, x );
-      mvaddstr(30, 0, "green");
+      mvaddstr(25, 0, "green");
    }
 
 
@@ -46,7 +84,7 @@ public:
       player[curPlayer].setPosition(y, x);
       fillArea (blue, y, x);
       getPoints (y, x);
-      move (31, 0);
+      move (26, 0);
       printw ("up        %d\n", points.up);
       printw ("down      %d\n", points.down);
       printw ("left      %d\n", points.left);
@@ -55,6 +93,7 @@ public:
       printw ("upRight   %d\n", points.upRight);
       printw ("downRight %d\n", points.downRight);
       printw ("downLeft  %d\n", points.downLeft);
+      printw ("all       %d\n", points.all);
    }
 
 
@@ -284,6 +323,12 @@ public:
          };
       };
       int all;
+      void compAll()
+      {
+         all = 0;
+         for (uint8_t i = 0; i < 8; ++i)
+            all += ar[i];
+      }
    };
 
    void getPoints (int y, int x)
@@ -320,19 +365,16 @@ public:
             } else if ( i == 0 || i == 7 ) {
                // до сюда дойдёт только тогда,
                // когда все поля в этом направлении и так наши
+               // tеще не продумано
                direction = 0;
                break;
             }
          }
-      };
-      compPointsInDirection (points.up);
-      compPointsInDirection (points.down);
-      compPointsInDirection (points.left);
-      compPointsInDirection (points.right);
-      compPointsInDirection (points.upLeft);
-      compPointsInDirection (points.upRight);
-      compPointsInDirection (points.downLeft);
-      compPointsInDirection (points.downRight);
+      }; // end []()
+
+      for (uint8_t i = 0; i < 8; ++i)
+         compPointsInDirection (points.ar[i]);
+      points.compAll();
    }
 
 

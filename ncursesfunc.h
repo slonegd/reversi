@@ -1,6 +1,7 @@
 #pragma once
 
-#include <ncurses.h>
+//#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 
 enum color {
    green = 1, red, blue, black
